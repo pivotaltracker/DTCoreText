@@ -63,8 +63,8 @@
 	{
 		NSDictionary *attributes = [self attributesForAttributedStringRepresentation];
 		
-		// ignore text, use unicode object placeholder
-		NSMutableAttributedString *tmpString = [[NSMutableAttributedString alloc] initWithString:UNICODE_OBJECT_PLACEHOLDER attributes:attributes];
+		// Change -> was adding some crazy unicode chars to the beginning
+		NSMutableAttributedString *tmpString = [[NSMutableAttributedString alloc] initWithString:@"" attributes:attributes];
 		
 		// block-level elements get space trimmed and a newline
 		if (self.displayStyle != DTHTMLElementDisplayStyleInline)
@@ -72,9 +72,23 @@
 			[tmpString appendString:@"\n"];
 		}
 		
+		// Add alt text to the string representation of this element if it exists
+		NSString *alt = [_textAttachment.attributes objectForKey:@"alt"];
+		NSString *src = [_textAttachment.attributes objectForKey:@"src"];
+		
+		if(alt.length != 0) {
+			NSAttributedString *altAttributed = [[NSAttributedString alloc] initWithString:alt attributes:@{NSLinkAttributeName: [NSURL URLWithString:src]}];
+			[tmpString appendAttributedString:altAttributed];
+		} else {
+			// If alt text is not present, use src
+			NSAttributedString *srcAttributed = [[NSAttributedString alloc] initWithString:src attributes:@{NSLinkAttributeName: [NSURL URLWithString:src]}];
+			[tmpString appendAttributedString:srcAttributed];
+		}
+		
 		return tmpString;
 	}
 }
+
 
 // workaround, because we don't support float yet. float causes the image to be its own block
 - (DTHTMLElementDisplayStyle)displayStyle
